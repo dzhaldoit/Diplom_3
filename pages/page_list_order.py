@@ -1,112 +1,73 @@
-
+import time
 
 import allure
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from helpers import wait_for_page_load, should_be_visible_elements, invisible_element
 
-from locators.ui_locators import Locators
+from locators.order_locators import OrderLocators
+from pages.base_page import BasePage
 
 
 @allure.title('Проверка "Ленты Заказов"')
-class PageListOrder:
-    @allure.step('Открытие браузера')
-    def open_browser(self, driver, web_url):
-        driver.get(web_url)
-        return self
-
+class PageListOrder(BasePage):
     @allure.step('Клик по кнопке "Лента Заказов"')
-    def click_list_orders(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.LIST_ORDER_BUTTON)))
-        element = driver.find_element(By.XPATH, Locators.LIST_ORDER_BUTTON)
-        driver.execute_script("arguments[0].click()", element)
-        return self
-
-    @allure.step('Авторизация')
-    def authorization(self, driver, create_user):
-        response_post, data = create_user
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.PERSONAL_ACCOUNT_BUTTON)))
-        driver.find_element(By.XPATH, Locators.PERSONAL_ACCOUNT_BUTTON).click()
-        driver.find_element(By.XPATH, Locators.EMAIL_INPUT).send_keys(data["email"])
-        driver.find_element(By.XPATH, Locators.PASSWORD_INPUT).send_keys(data["password"])
-        driver.find_element(By.XPATH, Locators.LOGIN_BUTTON).click()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.CREATE_ORDER_BUTTON)))
-        return self
+    def click_list_orders(self):
+        self.wait_element_appear(OrderLocators.LIST_ORDER_BUTTON)
+        self.click_element(OrderLocators.LIST_ORDER_BUTTON)
 
     @allure.step('Клик по заказу в "Ленте заказов"')
-    def click_order_in_list_orders(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.CLICK_ORDER_IN_LIST_ORDER)))
-        driver.find_element(By.XPATH, Locators.CLICK_ORDER_IN_LIST_ORDER).click()
-        return self
+    def click_order_in_list_orders(self):
+        self.click_element(OrderLocators.CLICK_ORDER_IN_LIST_ORDER)
+
+    @allure.step('Проверить заказа в "Ленте заказов"')
+    def check_order_on_screen(self):
+        return self.presence_element(OrderLocators.ORDER_IN_LIST_ORDERS).is_displayed()
 
     @allure.step("Получение количества заказов за все время")
-    def number_orders_all_time(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.TEXT_COMPLETED_ALL_TIME)))
-        element = driver.find_element(By.XPATH, Locators.TEXT_COMPLETED_ALL_TIME)
-        return element
+    def number_orders_all_time(self):
+        self.get_text(OrderLocators.TEXT_COMPLETED_ALL_TIME)
 
     @allure.step("Получение количества заказов за сегодня")
-    def number_orders_today(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.TEXT_COMPLETED_TODAY)))
-        element = driver.find_element(By.XPATH, Locators.TEXT_COMPLETED_TODAY)
-        return element.text
+    def number_orders_today(self):
+        self.get_text(OrderLocators.TEXT_COMPLETED_TODAY)
 
     @allure.step('Клик по кнопке "Конструктор"')
-    def click_constructor(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.CONSTRUCTOR_BUTTON)))
-        driver.find_element(By.XPATH, Locators.CONSTRUCTOR_BUTTON).click()
-        return self
+    def click_constructor(self):
+        self.click_element(OrderLocators.CONSTRUCTOR_BUTTON)
 
-    @allure.step('Оформление заказа и клик по кнопке "Оформить заказ"')
-    def click_create_order(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.BUN_INGREDIENT)))
-        element = driver.find_element(By.XPATH, Locators.BUN_INGREDIENT)
-        basket = driver.find_element(By.XPATH, Locators.BASKET_ORDER)
-        ActionChains(driver).move_to_element(element).click_and_hold().move_to_element(basket).release().perform()
-        driver.find_element(By.XPATH, Locators.CREATE_ORDER_BUTTON).click()
-        return self
+    @allure.step('Клик по кнопке "Оформить заказ"')
+    def click_create_order(self):
+        self.click_element(OrderLocators.CREATE_ORDER_BUTTON)
+        time.sleep(2)
+
+    def number_order(self):
+        self.wait_element_disappear(OrderLocators.NUMBER_ORDER_INVISIBLE)
+        return self.get_text(OrderLocators.TEXT_NUMBER_ORDER_IN_MODAL_WINDOW)
 
     @allure.step('Закрытие модального окна и получение номера заказа')
-    def close_modal_window(self, driver):
-        WebDriverWait(driver, 10).until(EC.invisibility_of_element((By.XPATH, Locators.NUMBER_ORDER_INVISIBLE)))
-        should_be_visible_elements(driver, (By.CSS_SELECTOR, Locators.TEXT_NUMBER_ORDER_IN_MODAL_WINDOW))
-        number_order = driver.find_element(By.CSS_SELECTOR, Locators.TEXT_NUMBER_ORDER_IN_MODAL_WINDOW)
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.CLOSE_MODAL_WINDOW_BUTTON)))
-        element = driver.find_element(By.XPATH, Locators.CLOSE_MODAL_WINDOW_BUTTON)
-        if element.is_displayed():
-            driver.execute_script("arguments[0].click()", element)
-        return number_order.text
+    def close_modal_window(self):
+        self.wait_element_appear(OrderLocators.CLOSE_MODAL_WINDOW_BUTTON)
+        self.click_element(OrderLocators.CLOSE_MODAL_WINDOW_BUTTON)
+        self.wait_element_disappear(OrderLocators.CLOSE_MODAL_WINDOW_BUTTON)
 
     @allure.step('Проверка количество выполненных заказов за все время')
-    def should_be_count_all_time(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.TEXT_COMPLETED_ALL_TIME)))
-        element_all_time_count = driver.find_element(By.XPATH, Locators.TEXT_COMPLETED_ALL_TIME)
-        return element_all_time_count
+    def should_be_count_all_time(self):
+        self.get_text(OrderLocators.TEXT_COMPLETED_ALL_TIME)
 
     @allure.step('Проверка списка "В процессе" выполненных заказов')
-    def should_be_count_today(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.TEXT_COMPLETED_TODAY)))
-        element_in_progress = driver.find_element(By.XPATH, Locators.TEXT_COMPLETED_TODAY)
-        return element_in_progress.text
+    def should_be_count_today(self):
+        return self.get_text(OrderLocators.TEXT_COMPLETED_TODAY)
+
+    @allure.step('Добавление ингредиента в заказ')
+    def add_ingredients(self):
+        self.drag_and_drop(self.find_element(OrderLocators.BUN_INGREDIENT),
+                           self.find_element(OrderLocators.BASKET_ORDER))
 
     @allure.step('Проверка списка "Готовы" выполненных заказов')
-    def should_complete_order_list(self, driver):
-        invisible_element(driver, (By.XPATH, Locators.COMLETED_INVISIBLE))
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.COMPLETED_ORDER_LIST)))
-
-        element = driver.find_element(By.XPATH, Locators.COMPLETED_ORDER_LIST)
-        wait_for_page_load(driver, 10, (By.XPATH, Locators.COMPLETED_ORDER_LIST))
-        return element
+    def should_complete_order_list(self):
+        self.wait_element_disappear(OrderLocators.COMLETED_INVISIBLE)
+        self.wait_element_appear(OrderLocators.COMPLETED_ORDER_LIST)
+        return self.get_text(OrderLocators.COMPLETED_ORDER_LIST)
 
     @allure.step('Проверка списка выполненных заказов в "Ленте заказов"')
-    def should_order_in_order_list(self, driver):
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, Locators.WINDOW_LIST_ORDER)))
-
-        element = driver.find_element(By.XPATH, Locators.WINDOW_LIST_ORDER)
-        wait_for_page_load(driver, 10, (By.XPATH, Locators.WINDOW_LIST_ORDER))
-        return element
-
-
-order_page = PageListOrder()
+    def should_order_in_order_list(self):
+        self.wait_element_appear(OrderLocators.WINDOW_LIST_ORDER)
+        return self.get_text(OrderLocators.WINDOW_LIST_ORDER)

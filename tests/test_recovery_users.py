@@ -1,43 +1,37 @@
 import allure
-from selenium.webdriver.common.by import By
 
-from locators.ui_locators import Locators
-from pages.page_password_recovery import web_page
+from data import Urls
+from pages.page_password_recovery import PasswordRecoveryPage
 
 
 @allure.suite('Восстановление пароля')
 class TestRecoveryUsers:
-    @allure.title('Кнопка "Восстановить пароль"')
-    def test_recovery_button(self, driver, web_url):
-        with allure.step('Открытие браузера'):
-            web_page.open_browser(driver, web_url)
-        with allure.step('Клик по кнопке "Восстановить пароль"'):
-            web_page.lk_bottom_and_recovery(driver)
+    @allure.title('Тест кнопки "Восстановить пароль"')
+    def test_recovery_button(self, driver):
+        page = PasswordRecoveryPage(driver)
+        page.open(Urls.URL_LOGIN)
+        page.button_recovery()
 
-        assert driver.find_element(By.XPATH, Locators.TEXT_RECOVERY).is_displayed()
+        assert page.text_recovery_password() == True
 
-    @allure.title('Отправка почты и клик по кнопке "Сохранить"')
-    def test_send_email_and_click_button(self, driver, web_url, create_user):
-        with allure.step('Открытие браузера'):
-            web_page.open_browser(driver, web_url)
-        with allure.step('Клик по кнопке "Восстановить пароль"'):
-            web_page.lk_bottom_and_recovery(driver)
-        with allure.step('Отправка почты и клик по кнопке "Сохранить"'):
-            web_page.send_email_and_click_button(driver, create_user)
+    @allure.title('Тест кнопки "Сохранить"')
+    def test_send_email_and_click_button(self, driver, create_user):
+        page = PasswordRecoveryPage(driver)
+        page.open(Urls.URL_LOGIN)
+        page.button_recovery()
+        page.send_email(create_user)
+        page.click_button_recovery()
 
-        assert driver.find_element(By.XPATH, Locators.SAVE_BUTTON).is_displayed()
+        assert page.text_save() == True
 
     @allure.title('Новый пароль')
-    def test_new_password(self, driver, web_url, create_user):
-        with allure.step('Открытие браузера'):
-            web_page.open_browser(driver, web_url)
-        with allure.step('Клик по кнопке "Восстановить пароль"'):
-            web_page.lk_bottom_and_recovery(driver)
-        with allure.step('Отправка почты и клик по кнопке "Сохранить"'):
-            web_page.send_email_and_click_button(driver, create_user)
-        with allure.step('Новый пароль'):
-            web_page.new_password(driver)
-        with allure.step('Клик по кнопке "Показать пароль"'):
-            web_page.eye_button(driver)
+    def test_new_password(self, driver, create_user):
+        page = PasswordRecoveryPage(driver)
+        page.open(Urls.URL_LOGIN)
+        page.button_recovery()
+        page.send_email(create_user)
+        page.click_button_recovery()
+        page.new_password()
+        page.eye_button()
 
-        assert driver.find_element(By.XPATH, Locators.TEXT_PASSWORD_RECOVERY).is_displayed()
+        assert page.check_password_field_status()
